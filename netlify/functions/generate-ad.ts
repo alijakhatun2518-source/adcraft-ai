@@ -1,5 +1,4 @@
-declare module 'serverless-http' {
-  import { RequestHandler } from 'express';
-  const serverless: (app: RequestHandler) => any;
-  export default serverless;
-}
+import serverless from 'serverless-http';
+import { app } from '../../server';
+
+export const handler = serverless(app);
