@@ -11,10 +11,10 @@ app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
 // Initialize GoogleGenAI
-const getAIClient = (overrideApiKey?: string) => {
-  const apiKey = overrideApiKey || process.env.GEMINI_API_KEY;
+const getAIClient = () => {
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    console.warn("GEMINI_API_KEY environment variable or custom API key is missing.");
+    console.warn("GEMINI_API_KEY environment variable is missing.");
   }
   return new GoogleGenAI({
     apiKey: apiKey || '',
@@ -285,17 +285,13 @@ app.post('/api/generate-ad', async (req, res) => {
       variationsCount = 1,
     } = req.body;
 
-    const headerKey = (req.headers['x-gemini-api-key'] as string) || '';
-    const bodyKey = (req.body.customApiKey as string) || '';
-    const activeApiKey = headerKey.trim() || bodyKey.trim() || process.env.GEMINI_API_KEY || '';
-
-    if (!activeApiKey) {
-      return res.status(400).json({
-        error: 'Gemini API key পাওয়া যায়নি! অনুগ্রহ করে "API Key" সেটিংসে আপনার Gemini API Key সেট করুন।',
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({
+        error: 'Gemini API key is not configured in the server environment. Please configure GEMINI_API_KEY in Secrets.',
       });
     }
 
-    const ai = getAIClient(activeApiKey);
+    const ai = getAIClient();
 
     // Construct master prompt
     let promptContent = `You are an elite Direct Response Copywriter, Ad Strategist, and Video Scriptwriter specializing in high-converting Facebook, Instagram, TikTok, YouTube, and Google ads.
@@ -503,8 +499,4 @@ async function startServer() {
   });
 }
 
-export { app };
-
-if (process.env.NETLIFY !== 'true') {
-  startServer();
-}
+startServer();
