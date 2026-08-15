@@ -1,4 +1,6 @@
-@@ -1,172 +0,0 @@
+import React, { useState, useEffect } from 'react';
+import { Key, Eye, EyeOff, Check, Trash2, ExternalLink, ShieldCheck, Sparkles, X } from 'lucide-react';
+...
 import React, { useState, useEffect } from 'react';
 import { Key, Eye, EyeOff, Check, Trash2, ExternalLink, ShieldCheck, Sparkles, X } from 'lucide-react';
 
