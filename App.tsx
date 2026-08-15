@@ -3,7 +3,6 @@ import { Header } from './components/Header';
 import { InputSection } from './components/InputSection';
 import { ConceptCard } from './components/ConceptCard';
 import { SavedCampaignsDrawer } from './components/SavedCampaignsDrawer';
-import { ApiKeyModal } from './components/ApiKeyModal';
 import { AdConcept, AdGenerationParams, LanguageType, SavedCampaign, ThemeType } from './types';
 import { Sparkles, AlertCircle, Layers, RefreshCw, CheckCircle2 } from 'lucide-react';
 
@@ -11,34 +10,15 @@ export default function App() {
   const [selectedLanguage, setSelectedLanguage] = useState<LanguageType>('auto');
   const [theme, setTheme] = useState<ThemeType>(() => {
     try {
-      return (localStorage.getItem('adcraft_theme') as ThemeType) || 'royal';
-    } catch {
-      return 'royal';
-    }
-  });
-
-  // Custom API Key State
-  const [customApiKey, setCustomApiKey] = useState<string>(() => {
-    try {
-      return localStorage.getItem('adcraft_custom_api_key') || '';
-    } catch {
-      return '';
-    }
-  });
-  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
-
-  const handleSaveApiKey = (key: string) => {
-    setCustomApiKey(key);
-    try {
-      if (key) {
-        localStorage.setItem('adcraft_custom_api_key', key);
-      } else {
-        localStorage.removeItem('adcraft_custom_api_key');
+      const stored = localStorage.getItem('adcraft_theme') as ThemeType;
+      if (stored && stored !== ('royal' as any) && ['midnight', 'emerald', 'slate', 'light'].includes(stored)) {
+        return stored;
       }
-    } catch (e) {
-      console.error('Failed to save custom API key:', e);
+      return 'midnight';
+    } catch {
+      return 'midnight';
     }
-  };
+  });
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -54,8 +34,6 @@ export default function App() {
 
   const getThemeBackgroundClass = (t: ThemeType) => {
     switch (t) {
-      case 'royal':
-        return 'bg-slate-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900 via-slate-950 to-violet-950 text-slate-100';
       case 'midnight':
         return 'bg-slate-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-950 via-slate-950 to-indigo-950 text-slate-100';
       case 'emerald':
@@ -65,7 +43,7 @@ export default function App() {
       case 'light':
         return 'bg-slate-100 text-slate-900';
       default:
-        return 'bg-slate-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900 via-slate-950 to-violet-950 text-slate-100';
+        return 'bg-slate-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-950 via-slate-950 to-indigo-950 text-slate-100';
     }
   };
   
@@ -108,13 +86,12 @@ export default function App() {
     setLastParams(params);
 
     try {
-      const response = await fetch('/.netlify/functions/generate-ad', {
+      const response = await fetch('/api/generate-ad', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(customApiKey ? { 'x-gemini-api-key': customApiKey } : {}),
         },
-        body: JSON.stringify({ ...params, customApiKey }),
+        body: JSON.stringify(params),
       });
 
       const data = await response.json();
@@ -198,8 +175,6 @@ export default function App() {
         onLanguageChange={setSelectedLanguage}
         theme={theme}
         onThemeChange={handleThemeChange}
-        hasCustomApiKey={Boolean(customApiKey)}
-        onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
       />
 
       {/* Main Container */}
@@ -319,14 +294,6 @@ export default function App() {
         campaigns={savedCampaigns}
         onDeleteCampaign={handleDeleteCampaign}
         onSelectConcept={handleSelectFromDrawer}
-      />
-
-      {/* API Key Modal */}
-      <ApiKeyModal
-        isOpen={isApiKeyModalOpen}
-        onClose={() => setIsApiKeyModalOpen(false)}
-        apiKey={customApiKey}
-        onSaveApiKey={handleSaveApiKey}
       />
     </div>
   );
